@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cours du Dinar Algérien — Taux officiels</title>
+<style>
+  :root{ --orange:#e2711d; --dark:#1f2430; --light:#faf7f2; --green:#1a7f4b; --red:#c0392b; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--light);color:var(--dark)}
+  header{background:var(--orange);color:#fff;padding:1.2rem;text-align:center}
+  header h1{font-size:1.4rem}
+  header p{font-size:.85rem;opacity:.9;margin-top:.3rem}
+  main{max-width:720px;margin:2rem auto;padding:0 1rem}
+  .card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);overflow:hidden}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:.8rem 1rem;text-align:left}
+  thead{background:var(--dark);color:#fff}
+  tbody tr:nth-child(even){background:#fdf3ea}
+  td.rate{font-weight:700;font-variant-numeric:tabular-nums}
+  .up{color:var(--green);font-size:.8rem}
+  .down{color:var(--red);font-size:.8rem}
+  footer{max-width:720px;margin:0 auto 2rem;padding:0 1rem;font-size:.78rem;color:#666}
+  .status{margin:.8rem 0;font-size:.8rem;color:#555}
+  .badge{display:inline-block;padding:.15rem .5rem;border-radius:999px;font-size:.7rem;font-weight:600}
+  .badge.live{background:#e6f4ea;color:var(--green)}
+  .badge.cache{background:#fdecea;color:var(--red)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>💱 Cours du Dinar Algérien</h1>
+  <p>Taux officiels mis à jour automatiquement chaque jour</p>
+</header>
+
+<main>
+  <div class="card">
+    <table>
+      <thead><tr><th>Devise</th><th>Base</th><th>En DZD</th><th>Var. 24h</th></tr></thead>
+      <tbody id="ratesBody"><tr><td colspan="4">Chargement des taux…</td></tr></tbody>
+    </table>
+  </div>
+  <p class="status" id="status">…</p>
+</main>
+
+<footer>
+  Source : taux officiels du marché international. Mise à jour quotidienne automatique.
+  En cas d'indisponibilité, les derniers taux connus sont affichés depuis le cache local.
+</footer>
+
+<script>
+const API_URL = "./rates.json";
+const CURRENCIES = [
+  { code:"EUR", name:"Euro",            flag:"🇪" },
+  { code:"USD", name:"Dollar US",       flag:"🇺" },
+  { code:"CAD", name:"Dollar canadien", flag:"🇨🇦" },
+  { code:"GBP", name:"Livre sterling",  flag:"🇬🇧" },
+  { code:"CHF", name:"Franc suisse",    flag:"🇨" }
+];
+
+async function chargerTaux(){
+  const cache = JSON.parse(localStorage.getItem("dzdCache") || "null");
+  try{
+    const res  = await fetch(API_URL + "?t=" + Date.now());
+    if(!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if(data.result !== "success") throw new Error("API");
+
+    const dzd = {};
+    CURRENCIES.forEach(c=>{
+      dzd[c.code] = (c.code === "USD") ? data.rates.DZD : data.rates.DZD / data.rates[c.code];
+    });
+
+    const nouveau = { rates: dzd, date: data.time_last_update_utc, prev: cache ? cache.rates : null };
+    localStorage.setItem("dzdCache", JSON.stringify(nouveau));
+    afficher(nouveau, true);
+  }catch(e){
+    if(cache){ afficher(cache, false); }
+    else{
+      document.getElementById("ratesBody").innerHTML =
+        '<tr><td colspan="4">⚠️ Impossible de charger les taux.</td></tr>';
+      document.getElementById("status").textContent = "Erreur de chargement.";
+    }
+  }
+}
+
+function afficher(d, live){
+  document.getElementById("ratesBody").innerHTML = CURRENCIES.map(c=>{
+    const val = d.rates[c.code];
+    let varHtml = "—";
+    if(d.prev && d.prev[c.code]){
+      const diff = val - d.prev[c.code];
+      if(Math.abs(diff) > 0.001){
+        varHtml = diff > 0
+          ? '<span class="up">▲ +' + diff.toFixed(2) + '</span>'
+          : '<span class="down">▼ ' + diff.toFixed(2) + '</span>';
+      }else{
+        varHtml = '<span style="color:#999">＝</span>';
+      }
+    }
+    return `<tr>
+      <td>${c.flag} ${c.name} <small style="color:#888">(${c.code})</small></td>
+      <td>1 ${c.code}</td>
+      <td class="rate">${val.toFixed(2)} DA</td>
+      <td>${varHtml}</td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("status").innerHTML =
+    (live ? '<span class="badge live">● EN DIRECT</span>'
+          : '<span class="badge cache">● CACHE LOCAL</span>') +
+    ' Dernière mise à jour : <strong>' + (d.date || "inconnue") + '</strong>';
+}
+
+chargerTaux();
+</script>
+</body>
+</html>
