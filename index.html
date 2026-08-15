@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cours du Dinar Algérien — Taux officiels</title>
+<title>Cours du Dinar Algérien — Officiel + Square</title>
 <style>
   :root{ --orange:#e2711d; --dark:#1f2430; --light:#faf7f2; --green:#1a7f4b; --red:#c0392b; }
   *{margin:0;padding:0;box-sizing:border-box}
@@ -12,7 +12,7 @@
   header h1{font-size:1.4rem}
   header p{font-size:.85rem;opacity:.9;margin-top:.3rem}
   main{max-width:720px;margin:2rem auto;padding:0 1rem}
-  .card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);overflow:hidden}
+  .card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);overflow:hidden;margin-bottom:1rem}
   table{width:100%;border-collapse:collapse}
   th,td{padding:.8rem 1rem;text-align:left}
   thead{background:var(--dark);color:#fff}
@@ -25,40 +25,42 @@
   .badge{display:inline-block;padding:.15rem .5rem;border-radius:999px;font-size:.7rem;font-weight:600}
   .badge.live{background:#e6f4ea;color:var(--green)}
   .badge.cache{background:#fdecea;color:var(--red)}
+  h2{margin:2.5rem 0 1rem;font-size:1.1rem}
 </style>
 </head>
 <body>
 
 <header>
   <h1>💱 Cours du Dinar Algérien</h1>
-  <p>Taux officiels mis à jour automatiquement chaque jour</p>
+  <p>Taux officiels + marché parallèle mis à jour quotidiennement</p>
 </header>
 
 <main>
+  <h2>🏛️ Taux officiels (Banque d'Algérie)</h2>
   <div class="card">
     <table>
       <thead><tr><th>Devise</th><th>Base</th><th>En DZD</th><th>Var. 24h</th></tr></thead>
-      <tbody id="ratesBody"><tr><td colspan="4">Chargement des taux…</td></tr></tbody>
+      <tbody id="ratesBody"><tr><td colspan="4">Chargement…</td></tr></tbody>
     </table>
   </div>
-  <h2 style="margin:2.5rem 0 1rem;font-size:1.1rem">🏦 Marché parallèle (Square Port-Saïd)</h2>
-<div class="card">
-  <table>
-    <thead><tr><th>Devise</th><th>Achat</th><th>Vente</th></tr></thead>
-    <tbody id="squareBody"><tr><td colspan="3">Chargement…</td></tr></tbody>
-  </table>
-</div>
-<p class="status" id="squareStatus"></p>
   <p class="status" id="status">…</p>
+
+  <h2>🏦 Marché parallèle (Square Port-Saïd)</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Devise</th><th>Achat</th><th>Vente</th></tr></thead>
+      <tbody id="squareBody"><tr><td colspan="3">Chargement…</td></tr></tbody>
+    </table>
+  </div>
+  <p class="status" id="squareStatus"></p>
 </main>
 
 <footer>
-  Source : taux officiels du marché international. Mise à jour quotidienne automatique.
-  En cas d'indisponibilité, les derniers taux connus sont affichés depuis le cache local.
+  Taux officiels : open.er-api.com. Marché parallèle : squareportsaid.com. Mise à jour quotidienne automatique.
 </footer>
 
 <script>
-   const API_URL = "./taux.json";
+const API_URL = "./taux.json";
 const CURRENCIES = [
   { code:"EUR", name:"Euro",            flag:"🇪" },
   { code:"USD", name:"Dollar US",       flag:"🇺" },
@@ -121,7 +123,29 @@ function afficher(d, live){
     ' Dernière mise à jour : <strong>' + (d.date || "inconnue") + '</strong>';
 }
 
+async function chargerSquare(){
+  try{
+    const res = await fetch("./square.json?t=" + Date.now());
+    if(!res.ok) throw new Error();
+    const d = await res.json();
+    const names = {EUR:"Euro",USD:"Dollar US",GBP:"Livre sterling",CAD:"Dollar canadien",CHF:"Franc suisse"};
+    document.getElementById("squareBody").innerHTML = Object.keys(names).map(c=>{
+      const r = d.rates[c];
+      if(!r) return "";
+      return `<tr><td>${names[c]} <small style="color:#888">(${c})</small></td>
+              <td class="rate">${r.achat.toFixed(2)} DA</td>
+              <td class="rate">${r.vente.toFixed(2)} DA</td></tr>`;
+    }).join("");
+    document.getElementById("squareStatus").innerHTML =
+      'Source : <a href="https://squareportsaid.com/" target="_blank" rel="noopener">squareportsaid.com</a> — mise à jour : ' + d.date;
+  }catch(e){
+    document.getElementById("squareBody").innerHTML =
+      '<tr><td colspan="3">Données square non disponibles.</td></tr>';
+  }
+}
+
 chargerTaux();
+chargerSquare();
 </script>
 </body>
 </html>
