@@ -1,3 +1,24 @@
+name: Mise à jour des taux
+on:
+  schedule:
+    - cron: '5 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Taux officiels
+        run: curl -s "https://open.er-api.com/v6/latest/USD" -o taux.json
+
+      - name: Valider taux.json
+        run: python3 -c "import json; json.load(open('taux.json'))"
+
       - name: Taux du square (scraping)
         run: |
           python3 - <<'PY'
@@ -29,28 +50,24 @@
           out = {}
           
           for i,l in enumerate(L):
-            # Chercher "EUR / DZD" ou juste "EUR"
-            if any(l.startswith(c + " /") or l == c for c in codes) and l not in out:
+            if any(l.startswith(c + " /") or l == c for c in codes):
               code = l.split(" /")[0].strip()
+              if code in out:
+                continue
               a = v = None
               
-              # Chercher dans les 15 lignes suivantes
               for j in range(i+1, min(i+15, len(L))):
-                # Pattern 1: "Achat" seul, puis valeur sur la ligne suivante
                 if L[j] == "Achat" and j+1 < len(L):
                   m = re.match(r"^([\d.,]+)$", L[j+1])
                   if m: a = float(m.group(1).replace(",","."))
                 
-                # Pattern 2: "Vente" seul, puis valeur sur la ligne suivante
                 if L[j] == "Vente" and j+1 < len(L):
                   m = re.match(r"^([\d.,]+)$", L[j+1])
                   if m: v = float(m.group(1).replace(",","."))
                 
-                # Pattern 3: "274.00 Achat" sur la même ligne
                 m = re.match(r"^([\d.,]+)\s+Achat$", L[j])
                 if m: a = float(m.group(1).replace(",","."))
                 
-                # Pattern 4: "276.00 Vente" sur la même ligne
                 m = re.match(r"^([\d.,]+)\s+Vente$", L[j])
                 if m: v = float(m.group(1).replace(",","."))
                 
@@ -74,3 +91,12 @@
             print("❌ Aucune devise trouvée")
             exit(1)
           PY
+
+      - name: Commiter et pousser
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add taux.json square.json
+          git diff --cached --quiet || git commit -m "chore: taux $(date -u +%F)"
+          git pull --rebase origin main
+          git push
