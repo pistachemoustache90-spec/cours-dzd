@@ -12,14 +12,51 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Récupérer les taux
+
+      - name: Taux officiels
         run: curl -s "https://open.er-api.com/v6/latest/USD" -o taux.json
-      - name: Valider le JSON
-        run: python -c "import json; json.load(open('taux.json'))"
+
+      - name: Valider taux.json
+        run: python3 -c "import json; json.load(open('taux.json'))"
+
+      - name: Taux du square (scraping)
+        run: |
+          python3 - <<'PY'
+          import re, json, urllib.request, html as h
+          req = urllib.request.Request("https://squareportsaid.com/", headers={"User-Agent":"Mozilla/5.0"})
+          raw = urllib.request.urlopen(req, timeout=30).read().decode("utf-8")
+          t = re.sub(r"<(script|style).*?</\1>", " ", raw, flags=re.S)
+          t = re.sub(r"<[^>]+>", "\n", t)
+          t = h.unescape(t)
+          L = [x.strip() for x in t.splitlines() if x.strip()]
+          codes = ["EUR","USD","GBP","CAD","CHF"]
+          out = {}
+          for i,l in enumerate(L):
+            if l in codes and l not in out:
+              a = v = None
+              for j in range(i+1, min(i+10, len(L))):
+                m = re.match(r"^([\d.,]+)\s*Achat$", L[j])
+                if m: a = float(m.group(1).replace(",","."))
+                m = re.match(r"^([\d.,]+)\s*Vente$", L[j])
+                if m: v = float(m.group(1).replace(",","."))
+                if L[j]=="Achat" and j+1<len(L) and re.match(r"^[\d.,]+$", L[j+1]):
+                  a = float(L[j+1].replace(",","."))
+                if L[j]=="Vente" and j+1<len(L) and re.match(r"^[\d.,]+$", L[j+1]):
+                  v = float(L[j+1].replace(",","."))
+                if a and v: break
+              if a and v: out[l] = {"achat": a, "vente": v}
+          date = ""
+          m = re.search(r"Dernière mise à jour\s*:\s*([^<\n]+)", t)
+          if m: date = m.group(1).strip()
+          assert len(out) >= 4, "parsing incomplet"
+          json.dump({"date": date, "rates": out, "source": "squareportsaid.com"},
+                    open("square.json","w"), ensure_ascii=False, indent=1)
+          PY
+
       - name: Commiter et pousser
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add taux.json
+          git add taux.json square.json
           git diff --cached --quiet || git commit -m "chore: taux $(date -u +%F)"
           git push
