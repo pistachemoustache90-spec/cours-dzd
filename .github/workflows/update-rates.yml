@@ -1,3 +1,24 @@
+name: Mise à jour des taux
+on:
+  schedule:
+    - cron: '5 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Taux officiels
+        run: curl -s "https://open.er-api.com/v6/latest/USD" -o taux.json
+
+      - name: Valider taux.json
+        run: python3 -c "import json; json.load(open('taux.json'))"
+
       - name: Taux du square (scraping)
         run: |
           python3 - <<'PY'
@@ -14,7 +35,6 @@
             print(f"✅ Page téléchargée ({len(raw)} octets)")
           except Exception as e:
             print(f"❌ Erreur de téléchargement: {e}")
-            # Créer un fichier vide pour ne pas bloquer le workflow
             json.dump({"date": "erreur", "rates": {}, "source": "squareportsaid.com"},
                       open("square.json","w"), ensure_ascii=False, indent=1)
             exit(0)
@@ -58,7 +78,6 @@
             for idx, line in enumerate(L[:50]):
               print(f"  {idx}: {line}")
           
-          # Sauvegarder même si partiel (au moins 1 devise)
           if len(out) >= 1:
             json.dump({"date": date, "rates": out, "source": "squareportsaid.com"},
                       open("square.json","w"), ensure_ascii=False, indent=1)
@@ -67,3 +86,12 @@
             print("❌ Aucune devise trouvée, square.json non créé")
             exit(1)
           PY
+
+      - name: Commiter et pousser
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add taux.json square.json
+          git diff --cached --quiet || git commit -m "chore: taux $(date -u +%F)"
+          git pull --rebase origin main
+          git push
