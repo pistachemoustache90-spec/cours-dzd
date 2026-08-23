@@ -1,21 +1,21 @@
 {
- "date": "18 août 2026",
+ "date": "22 août 2026",
  "rates": {
   "EUR": {
-   "achat": 273.5,
+   "achat": 273.0,
    "vente": 275.5
   },
   "USD": {
-   "achat": 235.5,
-   "vente": 238.0
+   "achat": 236.0,
+   "vente": 239.0
   },
   "GBP": {
-   "achat": 311.0,
-   "vente": 314.0
+   "achat": 310.0,
+   "vente": 312.0
   },
   "CAD": {
-   "achat": 168.0,
-   "vente": 171.0
+   "achat": 167.0,
+   "vente": 169.0
   }
  },
  "source": "squareportsaid.com"
