@@ -1,22 +1,16 @@
 {
- "date": "22 août 2026",
- "rates": {
-  "EUR": {
-   "achat": 273.0,
-   "vente": 275.5
-  },
-  "USD": {
-   "achat": 236.0,
-   "vente": 239.0
-  },
-  "GBP": {
-   "achat": 310.0,
-   "vente": 312.0
-  },
-  "CAD": {
-   "achat": 167.0,
-   "vente": 169.0
+  "date": "30/09/2026",
+  "rates": {
+    "EUR": { "achat": 273.00, "vente": 275.50 },
+    "USD": { "achat": 236.00, "vente": 239.00 },
+    "GBP": { "achat": 310.00, "vente": 312.00 },
+    "CAD": { "achat": 167.00, "vente": 169.00 },
+    "CHF": { "achat": 288.50, "vente": 291.00 },
+    "CNY": { "achat": 32.00, "vente": 32.50 },
+    "SAR": { "achat": 61.00, "vente": 61.50 },
+    "AED": { "achat": 62.00, "vente": 63.50 },
+    "TRY": { "achat": 5.50, "vente": 5.50 },
+    "TND": { "achat": 77.50, "vente": 78.50 },
+    "MAD": { "achat": 23.00, "vente": 23.00 }
   }
- },
- "source": "squareportsaid.com"
 }
