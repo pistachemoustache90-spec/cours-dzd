@@ -62,11 +62,11 @@
 <script>
 const API_URL = "./taux.json";
 
-// 🚩 Toutes les devises de la capture
+// 🚩 Liste des devises (USDT supprimé, GBP corrigé)
 const CURRENCIES = [
   { code:"EUR", name:"Euro",             flag:"https://upload.wikimedia.org/wikipedia/commons/b/b7/Flag_of_Europe.svg" },
   { code:"USD", name:"Dollar US",        flag:"https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_States.svg" },
-  { code:"GBP", name:"Livre Sterling",   flag:"https://upload.wikimedia.org/wikipedia/commons/a/ae/Flag_of_the_United_Kingdom.svg" },
+  { code:"GBP", name:"Livre Sterling",   flag:"https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg" },
   { code:"CAD", name:"Dollar Canadien",  flag:"https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Canada.svg" },
   { code:"CHF", name:"Franc Suisse",     flag:"https://upload.wikimedia.org/wikipedia/commons/f/f3/Flag_of_Switzerland.svg" },
   { code:"CNY", name:"Yuan Chinois",     flag:"https://upload.wikimedia.org/wikipedia/commons/f/fa/Flag_of_the_People%27s_Republic_of_China.svg" },
@@ -74,8 +74,7 @@ const CURRENCIES = [
   { code:"AED", name:"Dirham EAU",       flag:"https://upload.wikimedia.org/wikipedia/commons/c/cb/Flag_of_the_United_Arab_Emirates.svg" },
   { code:"TRY", name:"Livre Turque",     flag:"https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg" },
   { code:"TND", name:"Dinar Tunisien",   flag:"https://upload.wikimedia.org/wikipedia/commons/c/ce/Flag_of_Tunisia.svg" },
-  { code:"MAD", name:"Dirham Marocain",  flag:"https://upload.wikimedia.org/wikipedia/commons/2/2c/Flag_of_Morocco.svg" },
-  { code:"USDT",name:"Tether",           flag:"https://upload.wikimedia.org/wikipedia/commons/2/26/Tether_logo.svg" }
+  { code:"MAD", name:"Dirham Marocain",  flag:"https://upload.wikimedia.org/wikipedia/commons/2/2c/Flag_of_Morocco.svg" }
 ];
 
 async function chargerTaux(){
@@ -98,7 +97,7 @@ async function chargerTaux(){
     if(cache){ afficher(cache, false); }
     else{
       document.getElementById("ratesBody").innerHTML =
-        '<tr><td colspan="4">️ Impossible de charger les taux.</td></tr>';
+        '<tr><td colspan="4">⚠️ Impossible de charger les taux.</td></tr>';
       document.getElementById("status").textContent = "Erreur de chargement.";
     }
   }
@@ -144,8 +143,7 @@ async function chargerSquare(){
       EUR:"Euro", USD:"Dollar US", GBP:"Livre Sterling",
       CAD:"Dollar Canadien", CHF:"Franc Suisse",
       CNY:"Yuan Chinois", SAR:"Riyal Saoudien", AED:"Dirham EAU",
-      TRY:"Livre Turque", TND:"Dinar Tunisien", MAD:"Dirham Marocain",
-      USDT:"Tether"
+      TRY:"Livre Turque", TND:"Dinar Tunisien", MAD:"Dirham Marocain"
     };
     document.getElementById("squareBody").innerHTML = Object.keys(names).map(c=>{
       const r = d.rates[c];
