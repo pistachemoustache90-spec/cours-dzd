@@ -36,7 +36,7 @@
 </header>
 
 <main>
-  <h2>🏛️ Taux officiels (Banque d'Algérie)</h2>
+  <h2>️ Taux officiels (Banque d'Algérie)</h2>
   <div class="card">
     <table>
       <thead><tr><th>Devise</th><th>Base</th><th>En DZD</th><th>Var. 24h</th></tr></thead>
@@ -86,7 +86,6 @@ async function chargerTaux(){
 
     const dzd = {};
     CURRENCIES.forEach(c=>{
-      // Vérifie que la devise existe dans les taux
       if(data.rates[c.code]){
         dzd[c.code] = (c.code === "USD") ? data.rates.DZD : data.rates.DZD / data.rates[c.code];
       }
@@ -108,7 +107,7 @@ async function chargerTaux(){
 function afficher(d, live){
   document.getElementById("ratesBody").innerHTML = CURRENCIES.map(c=>{
     const val = d.rates[c.code];
-    if(!val) return ''; // Saute si pas de valeur
+    if(!val) return '';
     
     let varHtml = "—";
     if(d.prev && d.prev[c.code]){
@@ -130,7 +129,7 @@ function afficher(d, live){
       <td class="rate">${val.toFixed(2)} DA</td>
       <td>${varHtml}</td>
     </tr>`;
-  }).filter(x => x).join(""); // Filtre les lignes vides
+  }).filter(x => x).join("");
 
   document.getElementById("status").innerHTML =
     (live ? '<span class="badge live">● EN DIRECT</span>'
@@ -149,13 +148,25 @@ async function chargerSquare(){
       CNY:"Yuan Chinois", SAR:"Riyal Saoudien", AED:"Dirham EAU",
       TRY:"Livre Turque", TND:"Dinar Tunisien", MAD:"Dirham Marocain"
     };
+    
     document.getElementById("squareBody").innerHTML = Object.keys(names).map(c=>{
       const r = d.rates[c];
       if(!r) return "";
-      return `<tr><td>${names[c]} <small style="color:#888">(${c})</small></td>
-              <td class="rate">${r.achat.toFixed(2)} DA</td>
-              <td class="rate">${r.vente.toFixed(2)} DA</td></tr>`;
-    }).join("");
+      
+      // 🚩 Trouver le drapeau correspondant
+      const currency = CURRENCIES.find(x => x.code === c);
+      const flag = currency ? currency.flag : '';
+      
+      return `<tr>
+        <td>
+          <img src="${flag}" alt="${c}" style="width:28px;height:auto;vertical-align:middle;margin-right:10px;border-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,0.15);">
+          ${names[c]} <small style="color:#888">(${c})</small>
+        </td>
+        <td class="rate">${r.achat.toFixed(2)} DA</td>
+        <td class="rate">${r.vente.toFixed(2)} DA</td>
+      </tr>`;
+    }).filter(x => x).join("");
+    
     document.getElementById("squareStatus").innerHTML =
       'Source : <a href="https://squareportsaid.com/" target="_blank" rel="noopener">squareportsaid.com</a> — mise à jour : ' + d.date;
   }catch(e){
