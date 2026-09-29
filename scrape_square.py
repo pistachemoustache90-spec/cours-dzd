@@ -22,7 +22,7 @@ L = [x.strip() for x in t.splitlines() if x.strip()]
 
 print(f"📄 {len(L)} lignes de texte extraites")
 
-codes = ["EUR", "USD", "GBP", "CAD", "CHF"]
+codes = ["EUR", "USD", "GBP", "CAD", "CHF", "CNY", "SAR", "AED", "TRY", "TND", "MAD"]
 out = {}
 
 for i, l in enumerate(L):
