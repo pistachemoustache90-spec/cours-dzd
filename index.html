@@ -62,7 +62,6 @@
 <script>
 const API_URL = "./taux.json";
 
-// 🚩 Liste des devises (USDT supprimé, GBP corrigé)
 const CURRENCIES = [
   { code:"EUR", name:"Euro",             flag:"https://upload.wikimedia.org/wikipedia/commons/b/b7/Flag_of_Europe.svg" },
   { code:"USD", name:"Dollar US",        flag:"https://upload.wikimedia.org/wikipedia/commons/a/a4/Flag_of_the_United_States.svg" },
@@ -87,7 +86,10 @@ async function chargerTaux(){
 
     const dzd = {};
     CURRENCIES.forEach(c=>{
-      dzd[c.code] = (c.code === "USD") ? data.rates.DZD : data.rates.DZD / data.rates[c.code];
+      // Vérifie que la devise existe dans les taux
+      if(data.rates[c.code]){
+        dzd[c.code] = (c.code === "USD") ? data.rates.DZD : data.rates.DZD / data.rates[c.code];
+      }
     });
 
     const nouveau = { rates: dzd, date: data.time_last_update_utc, prev: cache ? cache.rates : null };
@@ -106,6 +108,8 @@ async function chargerTaux(){
 function afficher(d, live){
   document.getElementById("ratesBody").innerHTML = CURRENCIES.map(c=>{
     const val = d.rates[c.code];
+    if(!val) return ''; // Saute si pas de valeur
+    
     let varHtml = "—";
     if(d.prev && d.prev[c.code]){
       const diff = val - d.prev[c.code];
@@ -126,7 +130,7 @@ function afficher(d, live){
       <td class="rate">${val.toFixed(2)} DA</td>
       <td>${varHtml}</td>
     </tr>`;
-  }).join("");
+  }).filter(x => x).join(""); // Filtre les lignes vides
 
   document.getElementById("status").innerHTML =
     (live ? '<span class="badge live">● EN DIRECT</span>'
