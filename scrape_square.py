@@ -15,16 +15,14 @@ except Exception as e:
         json.dump({"date": "erreur", "rates": {}, "source": "squareportsaid.com"}, f, ensure_ascii=False, indent=1)
     exit(0)
 
-# Nettoyage avancé du HTML
 t = re.sub(r"<(script|style).*?</\1>", " ", raw, flags=re.S)
 t = re.sub(r"<[^>]+>", "\n", t)
 t = h.unescape(t)
 
-# ✅ CORRECTION ICI : On supprime uniquement les emojis et on remplace les espaces insécables
 L = [
     re.sub(r'[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF]', '', x)
       .replace('\xa0', ' ')
-      .strip() 
+      .strip()
     for x in t.splitlines() if x.strip()
 ]
 
@@ -33,54 +31,46 @@ print(f"📄 {len(L)} lignes de texte extraites")
 codes = ["EUR", "USD", "GBP", "CAD", "CHF", "CNY", "SAR", "AED", "TRY", "TND", "MAD"]
 out = {}
 
+def parse_num(s):
+    s = s.replace(",", ".").strip()
+    m = re.match(r"^([\d.]+)$", s)
+    return float(m.group(1)) if m else None
+
 for i, l in enumerate(L):
-    # Cherche si un code devise est présent dans la ligne
     found_code = None
     for c in codes:
         if c in l and len(l) < 30:
             found_code = c
             break
-            
+
     if found_code and found_code not in out:
-        
-        # 🔍 SECTION DEBUG AJOUTÉE ICI
-        print(f"\n🔍 DEBUG {found_code} à la ligne {i}:")
-        for k in range(max(0, i-2), min(len(L), i+30)):
-            print(f"  L{k}: [{L[k]}]")
-        # FIN SECTION DEBUG
-        
         a = v = None
-        # Recherche flexible des prix dans les 25 lignes suivantes
-        for j in range(i + 1, min(i + 25, len(L))):
-            line = L[j].replace(",", ".").strip()
-            
-            # Format 1 : "273.00 Achat" ou "273.00 Buy"
-            m_achat = re.match(r"^([\d.]+)\s*(?:Achat|Buy)", line, re.IGNORECASE)
-            if m_achat: 
-                a = float(m_achat.group(1))
-            
-            # Format 2 : "275.50 Vente" ou "275.50 Sell"
-            m_vente = re.match(r"^([\d.]+)\s*(?:Vente|Sell)", line, re.IGNORECASE)
-            if m_vente: 
-                v = float(m_vente.group(1))
-            
-            # Format 3 : Mot "Achat" seul, prix à la ligne suivante
+        for j in range(i + 1, min(i + 20, len(L))):
+            line = L[j].strip()
+
+            # Format A : prix PUIS mot sur la MÊME ligne ("273.00 Achat")
+            m1 = re.match(r"^([\d.,]+)\s*(?:Achat|Buy)\b", line, re.IGNORECASE)
+            if m1: a = parse_num(m1.group(1))
+            m2 = re.match(r"^([\d.,]+)\s*(?:Vente|Sell)\b", line, re.IGNORECASE)
+            if m2: v = parse_num(m2.group(1))
+
+            # Format B : mot SEUL, prix à la ligne PRÉCÉDENTE  ← LE FIX CLÉ
+            if re.match(r"^(?:Achat|Buy)$", line, re.IGNORECASE):
+                if j - 1 >= 0:
+                    a = parse_num(L[j-1])
+            if re.match(r"^(?:Vente|Sell)$", line, re.IGNORECASE):
+                if j - 1 >= 0:
+                    v = parse_num(L[j-1])
+
+            # Format C : mot SEUL, prix à la ligne SUIVANTE (ancien format, gardé)
             if re.match(r"^(?:Achat|Buy)$", line, re.IGNORECASE) and j + 1 < len(L):
-                try: 
-                    a = float(L[j+1].replace(",", ".").strip())
-                except: 
-                    pass
-                
-            # Format 4 : Mot "Vente" seul, prix à la ligne suivante
+                if a is None: a = parse_num(L[j+1])
             if re.match(r"^(?:Vente|Sell)$", line, re.IGNORECASE) and j + 1 < len(L):
-                try: 
-                    v = float(L[j+1].replace(",", ".").strip())
-                except: 
-                    pass
+                if v is None: v = parse_num(L[j+1])
 
             if a is not None and v is not None:
                 break
-                
+
         if a is not None and v is not None:
             out[found_code] = {"achat": a, "vente": v}
             print(f"  ✅ {found_code}: achat={a}, vente={v}")
@@ -99,4 +89,5 @@ if len(out) >= 1:
         json.dump({"date": date, "rates": out, "source": "squareportsaid.com"}, f, ensure_ascii=False, indent=1)
     print("💾 square.json sauvegardé avec succès !")
 else:
-    print("❌ Aucune devise trouvée. Vérifiez la structure du site.")
+    print("❌ Aucune devise trouvée.")
+    exit(1)
