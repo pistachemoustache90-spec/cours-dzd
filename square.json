@@ -3,19 +3,47 @@
  "rates": {
   "EUR": {
    "achat": 273.0,
-   "vente": 275.5
+   "vente": 273.0
   },
   "USD": {
    "achat": 236.0,
-   "vente": 239.0
+   "vente": 236.0
   },
   "GBP": {
    "achat": 310.0,
-   "vente": 312.0
+   "vente": 310.0
   },
   "CAD": {
    "achat": 167.0,
-   "vente": 169.0
+   "vente": 167.0
+  },
+  "CHF": {
+   "achat": 288.5,
+   "vente": 291.0
+  },
+  "CNY": {
+   "achat": 32.0,
+   "vente": 32.5
+  },
+  "SAR": {
+   "achat": 61.0,
+   "vente": 61.5
+  },
+  "AED": {
+   "achat": 62.0,
+   "vente": 63.5
+  },
+  "TRY": {
+   "achat": 5.5,
+   "vente": 5.5
+  },
+  "TND": {
+   "achat": 77.5,
+   "vente": 78.5
+  },
+  "MAD": {
+   "achat": 23.0,
+   "vente": 23.0
   }
  },
  "source": "squareportsaid.com"
