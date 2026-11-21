@@ -73,11 +73,10 @@ for i, l in enumerate(L):
             if a is not None and v is not None:
                 break
         
-        if a is not None and v is not None:
-            out[found_code] = {"achat": a, "vente": v}
-            print(f"  ✅ {found_code}: {a} / {v}")
-        else:
-            print(f"  ⚠️ {found_code}: a={a}, v={v}")
+        if a <= v:  # achat doit être <= vente
+    out[found_code] = {"achat": a, "vente": v}
+else:
+    print(f"⚠️ {found_code}: incohérent, on ignore")
 
 date = ""
 m = re.search(r"Dernière mise à jour\s*[:\-]?\s*([^\n<]+)", t, re.IGNORECASE)
