@@ -31,7 +31,11 @@ print(f"📄 {len(L)} lignes extraites")
 codes = ["EUR", "USD", "GBP", "CAD", "CHF", "CNY", "SAR", "AED", "TRY", "TND", "MAD"]
 out = {}
 
-# Nouvelle approche : pour chaque code, on cherche les 2 prochains nombres dans les 15 lignes suivantes
+def parse_num(s):
+    s = s.replace(",", ".").strip()
+    m = re.match(r"^([\d.]+)$", s)
+    return float(m.group(1)) if m else None
+
 for i, l in enumerate(L):
     found_code = None
     for c in codes:
@@ -40,22 +44,40 @@ for i, l in enumerate(L):
             break
     
     if found_code and found_code not in out:
-        # Chercher les 2 prochains nombres après ce code
-        prices = []
-        for j in range(i + 1, min(i + 15, len(L))):
+        a = v = None
+        
+        # Chercher le pattern : nombre → Achat → nombre → Vente dans les 20 lignes suivantes
+        for j in range(i + 1, min(i + 20, len(L))):
             line = L[j].strip()
-            # Extraire tous les nombres de cette ligne
-            numbers = re.findall(r'[\d]+[.,][\d]+', line)
-            for num in numbers:
-                prices.append(float(num.replace(",", ".")))
-            if len(prices) >= 2:
+            
+            # Pattern 1 : "273.00 Achat" ou "273.00Achat"
+            m = re.match(r"^([\d.,]+)\s*(?:Achat|Buy)", line, re.IGNORECASE)
+            if m and a is None:
+                a = parse_num(m.group(1))
+            
+            # Pattern 2 : "275.50 Vente" ou "275.50Vente"
+            m = re.match(r"^([\d.,]+)\s*(?:Vente|Sell)", line, re.IGNORECASE)
+            if m and v is None:
+                v = parse_num(m.group(1))
+            
+            # Pattern 3 : "Achat" seul, le nombre est à la ligne PRÉCÉDENTE
+            if re.match(r"^(?:Achat|Buy)$", line, re.IGNORECASE) and a is None:
+                if j - 1 >= i:
+                    a = parse_num(L[j-1])
+            
+            # Pattern 4 : "Vente" seul, le nombre est à la ligne PRÉCÉDENTE
+            if re.match(r"^(?:Vente|Sell)$", line, re.IGNORECASE) and v is None:
+                if j - 1 >= i:
+                    v = parse_num(L[j-1])
+            
+            if a is not None and v is not None:
                 break
         
-        if len(prices) >= 2:
-            out[found_code] = {"achat": prices[0], "vente": prices[1]}
-            print(f"  ✅ {found_code}: {prices[0]} / {prices[1]}")
+        if a is not None and v is not None:
+            out[found_code] = {"achat": a, "vente": v}
+            print(f"  ✅ {found_code}: {a} / {v}")
         else:
-            print(f"  ⚠️ {found_code}: seulement {len(prices)} prix trouvé(s)")
+            print(f"  ⚠️ {found_code}: a={a}, v={v}")
 
 date = ""
 m = re.search(r"Dernière mise à jour\s*[:\-]?\s*([^\n<]+)", t, re.IGNORECASE)
