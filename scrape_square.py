@@ -42,6 +42,13 @@ for i, l in enumerate(L):
             break
             
     if found_code and found_code not in out:
+        
+        # 🔍 SECTION DEBUG AJOUTÉE ICI
+        print(f"\n🔍 DEBUG {found_code} à la ligne {i}:")
+        for k in range(max(0, i-2), min(len(L), i+30)):
+            print(f"  L{k}: [{L[k]}]")
+        # FIN SECTION DEBUG
+        
         a = v = None
         # Recherche flexible des prix dans les 25 lignes suivantes
         for j in range(i + 1, min(i + 25, len(L))):
