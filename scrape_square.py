@@ -26,68 +26,48 @@ L = [
     for x in t.splitlines() if x.strip()
 ]
 
-print(f"📄 {len(L)} lignes de texte extraites")
+print(f"📄 {len(L)} lignes extraites")
 
 codes = ["EUR", "USD", "GBP", "CAD", "CHF", "CNY", "SAR", "AED", "TRY", "TND", "MAD"]
 out = {}
 
-def parse_num(s):
-    s = s.replace(",", ".").strip()
-    m = re.match(r"^([\d.]+)$", s)
-    return float(m.group(1)) if m else None
-
+# Nouvelle approche : pour chaque code, on cherche les 2 prochains nombres dans les 15 lignes suivantes
 for i, l in enumerate(L):
     found_code = None
     for c in codes:
         if c in l and len(l) < 30:
             found_code = c
             break
-
+    
     if found_code and found_code not in out:
-        a = v = None
-        for j in range(i + 1, min(i + 20, len(L))):
+        # Chercher les 2 prochains nombres après ce code
+        prices = []
+        for j in range(i + 1, min(i + 15, len(L))):
             line = L[j].strip()
-
-            # Format A : prix PUIS mot sur la MÊME ligne ("273.00 Achat")
-            m1 = re.match(r"^([\d.,]+)\s*(?:Achat|Buy)\b", line, re.IGNORECASE)
-            if m1: a = parse_num(m1.group(1))
-            m2 = re.match(r"^([\d.,]+)\s*(?:Vente|Sell)\b", line, re.IGNORECASE)
-            if m2: v = parse_num(m2.group(1))
-
-            # Format B : mot SEUL, prix à la ligne PRÉCÉDENTE (le fix !)
-            if re.match(r"^(?:Achat|Buy)$", line, re.IGNORECASE):
-                if j - 1 >= 0 and a is None:
-                    a = parse_num(L[j-1])
-            if re.match(r"^(?:Vente|Sell)$", line, re.IGNORECASE):
-                if j - 1 >= 0 and v is None:
-                    v = parse_num(L[j-1])
-
-            # Format C : mot SEUL, prix à la ligne SUIVANTE (ancien format, gardé)
-            if re.match(r"^(?:Achat|Buy)$", line, re.IGNORECASE) and j + 1 < len(L):
-                if a is None: a = parse_num(L[j+1])
-            if re.match(r"^(?:Vente|Sell)$", line, re.IGNORECASE) and j + 1 < len(L):
-                if v is None: v = parse_num(L[j+1])
-
-            if a is not None and v is not None:
+            # Extraire tous les nombres de cette ligne
+            numbers = re.findall(r'[\d]+[.,][\d]+', line)
+            for num in numbers:
+                prices.append(float(num.replace(",", ".")))
+            if len(prices) >= 2:
                 break
-
-        if a is not None and v is not None:
-            out[found_code] = {"achat": a, "vente": v}
-            print(f"  ✅ {found_code}: achat={a}, vente={v}")
+        
+        if len(prices) >= 2:
+            out[found_code] = {"achat": prices[0], "vente": prices[1]}
+            print(f"  ✅ {found_code}: {prices[0]} / {prices[1]}")
         else:
-            print(f"  ⚠️ {found_code} trouvé mais prix manquants (ligne {i})")
+            print(f"  ⚠️ {found_code}: seulement {len(prices)} prix trouvé(s)")
 
 date = ""
 m = re.search(r"Dernière mise à jour\s*[:\-]?\s*([^\n<]+)", t, re.IGNORECASE)
 if m:
     date = m.group(1).strip()
 
-print(f"\n📊 {len(out)} devises trouvées sur {len(codes)} attendues")
+print(f"\n📊 {len(out)} devises sur {len(codes)}")
 
 if len(out) >= 1:
     with open("square.json", "w", encoding="utf-8") as f:
         json.dump({"date": date, "rates": out, "source": "squareportsaid.com"}, f, ensure_ascii=False, indent=1)
-    print("💾 square.json sauvegardé avec succès !")
+    print("💾 square.json sauvegardé !")
 else:
-    print("❌ Aucune devise trouvée.")
+    print("❌ Aucune devise trouvée")
     exit(1)
