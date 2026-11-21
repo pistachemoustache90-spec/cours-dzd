@@ -46,26 +46,25 @@ for i, l in enumerate(L):
     if found_code and found_code not in out:
         a = v = None
         
-        # Chercher le pattern : nombre → Achat → nombre → Vente dans les 20 lignes suivantes
         for j in range(i + 1, min(i + 20, len(L))):
             line = L[j].strip()
             
-            # Pattern 1 : "273.00 Achat" ou "273.00Achat"
+            # Pattern 1 : "273.00 Achat"
             m = re.match(r"^([\d.,]+)\s*(?:Achat|Buy)", line, re.IGNORECASE)
             if m and a is None:
                 a = parse_num(m.group(1))
             
-            # Pattern 2 : "275.50 Vente" ou "275.50Vente"
+            # Pattern 2 : "275.50 Vente"
             m = re.match(r"^([\d.,]+)\s*(?:Vente|Sell)", line, re.IGNORECASE)
             if m and v is None:
                 v = parse_num(m.group(1))
             
-            # Pattern 3 : "Achat" seul, le nombre est à la ligne PRÉCÉDENTE
+            # Pattern 3 : "Achat" seul, prix à la ligne précédente
             if re.match(r"^(?:Achat|Buy)$", line, re.IGNORECASE) and a is None:
                 if j - 1 >= i:
                     a = parse_num(L[j-1])
             
-            # Pattern 4 : "Vente" seul, le nombre est à la ligne PRÉCÉDENTE
+            # Pattern 4 : "Vente" seul, prix à la ligne précédente
             if re.match(r"^(?:Vente|Sell)$", line, re.IGNORECASE) and v is None:
                 if j - 1 >= i:
                     v = parse_num(L[j-1])
@@ -73,10 +72,12 @@ for i, l in enumerate(L):
             if a is not None and v is not None:
                 break
         
-        if a <= v:  # achat doit être <= vente
-    out[found_code] = {"achat": a, "vente": v}
-else:
-    print(f"⚠️ {found_code}: incohérent, on ignore")
+        # ✅ Vérification : achat doit être <= vente
+        if a is not None and v is not None and a <= v:
+            out[found_code] = {"achat": a, "vente": v}
+            print(f"  ✅ {found_code}: {a} / {v}")
+        else:
+            print(f"  ⚠️ {found_code}: ignoré (a={a}, v={v})")
 
 date = ""
 m = re.search(r"Dernière mise à jour\s*[:\-]?\s*([^\n<]+)", t, re.IGNORECASE)
@@ -86,8 +87,18 @@ if m:
 print(f"\n📊 {len(out)} devises sur {len(codes)}")
 
 if len(out) >= 1:
+    # ✅ Création d'un dictionnaire ordonné selon l'ordre de 'codes'
+    ordered_out = {}
+    for c in codes:
+        if c in out:
+            ordered_out[c] = out[c]
+    
     with open("square.json", "w", encoding="utf-8") as f:
-        json.dump({"date": date, "rates": out, "source": "squareportsaid.com"}, f, ensure_ascii=False, indent=1)
+        json.dump({
+            "date": date,
+            "rates": ordered_out,
+            "source": "squareportsaid.com"
+        }, f, ensure_ascii=False, indent=1)
     print("💾 square.json sauvegardé !")
 else:
     print("❌ Aucune devise trouvée")
