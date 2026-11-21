@@ -2,8 +2,8 @@ name: Update Rates & Square
 
 on:
   schedule:
-    - cron: '0 6 * * *'   # Tous les jours à 6h UTC
-  workflow_dispatch:        # Permet le déclenchement manuel
+    - cron: '0 6 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,28 +12,28 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Update taux.json (official rates)
-        run: python fetch_taux.py
-        continue-on-error: true
+        run: curl -s "https://open.er-api.com/v6/latest/USD" -o taux.json
 
       - name: Scrape square.json (parallel market)
         run: python scrape_square.py
+        continue-on-error: true
 
       - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add taux.json square.json
-          if ! git diff --staged --quiet; then
+          git diff --staged --quiet && echo "No changes to commit" || {
             git commit -m "chore: update rates $(date +%Y-%m-%d)"
-            git pull --rebase origin main
-            git push
-          fi
+            git pull --rebase origin main || git rebase --abort
+            git push --force-with-lease
+          }
