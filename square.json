@@ -1,10 +1,6 @@
 {
  "date": "22 août 2026",
  "rates": {
-  "CAD": {
-   "achat": 167.0,
-   "vente": 169.0
-  },
   "EUR": {
    "achat": 273.0,
    "vente": 275.5
@@ -16,6 +12,10 @@
   "GBP": {
    "achat": 310.0,
    "vente": 312.0
+  },
+  "CAD": {
+   "achat": 167.0,
+   "vente": 169.0
   },
   "CHF": {
    "achat": 288.5,
