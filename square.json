@@ -2,28 +2,28 @@
  "date": "22 août 2026",
  "rates": {
   "EUR": {
-   "achat": 273.0,
+   "achat": 0.18,
    "vente": 273.0
   },
   "USD": {
-   "achat": 236.0,
+   "achat": 0.21,
    "vente": 236.0
   },
   "GBP": {
-   "achat": 310.0,
+   "achat": 0.32,
    "vente": 310.0
   },
   "CAD": {
-   "achat": 167.0,
+   "achat": 0.6,
    "vente": 167.0
   },
   "CHF": {
-   "achat": 288.5,
-   "vente": 291.0
+   "achat": 0.52,
+   "vente": 288.5
   },
   "CNY": {
-   "achat": 32.0,
-   "vente": 32.5
+   "achat": 5.88,
+   "vente": 32.0
   },
   "SAR": {
    "achat": 61.0,
@@ -38,8 +38,8 @@
    "vente": 5.5
   },
   "TND": {
-   "achat": 77.5,
-   "vente": 78.5
+   "achat": 3.13,
+   "vente": 77.5
   },
   "MAD": {
    "achat": 23.0,
