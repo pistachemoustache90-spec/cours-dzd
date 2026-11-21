@@ -54,7 +54,7 @@ for i, l in enumerate(L):
             m2 = re.match(r"^([\d.,]+)\s*(?:Vente|Sell)\b", line, re.IGNORECASE)
             if m2: v = parse_num(m2.group(1))
 
-            # Format B : mot SEUL, prix à la ligne PRÉCÉDENTE  ← LE FIX CLÉ
+            # Format B : mot SEUL, prix à la ligne PRÉCÉDENTE (le fix !)
             if re.match(r"^(?:Achat|Buy)$", line, re.IGNORECASE):
                 if j - 1 >= 0:
                     a = parse_num(L[j-1])
