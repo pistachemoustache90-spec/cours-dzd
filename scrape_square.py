@@ -56,10 +56,10 @@ for i, l in enumerate(L):
 
             # Format B : mot SEUL, prix à la ligne PRÉCÉDENTE (le fix !)
             if re.match(r"^(?:Achat|Buy)$", line, re.IGNORECASE):
-                if j - 1 >= 0:
+                if j - 1 >= 0 and a is None:  # ← ajout de "and a is None"
                     a = parse_num(L[j-1])
             if re.match(r"^(?:Vente|Sell)$", line, re.IGNORECASE):
-                if j - 1 >= 0:
+                if j - 1 >= 0 and v is None:  # ← ajout de "and v is None"
                     v = parse_num(L[j-1])
 
             # Format C : mot SEUL, prix à la ligne SUIVANTE (ancien format, gardé)
